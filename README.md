@@ -7,24 +7,27 @@ A fraud detection system that scores transactions in real time, explains *why* a
 Most fraud-scoring models return a number. This platform goes further: when a transaction is flagged, it searches a vector database of past fraud cases for similar patterns, then uses an LLM to generate a plain-English explanation for a human analyst — turning a black-box score into something a non-technical reviewer can actually act on.
 
 ## Architecture
+
+\`\`\`
 Transaction Stream (simulator)
-│
-▼
+        │
+        ▼
 FastAPI Scoring Service ──► Logistic Regression model (scikit-learn)
-│
-├── Flagged as fraud?
-│ │
-│ ▼
-│ Embed transaction → Pinecone vector search (similar past fraud cases)
-│ │
-│ ▼
-│ Groq LLM (openai/gpt-oss-20b) → plain-English explanation
-│ │
-│ ▼
-│ Redis (recent alerts cache)
-│
-▼
+        │
+        ├── Flagged as fraud?
+        │       │
+        │       ▼
+        │   Embed transaction → Pinecone vector search (similar past fraud cases)
+        │       │
+        │       ▼
+        │   Groq LLM (openai/gpt-oss-20b) → plain-English explanation
+        │       │
+        │       ▼
+        │   Redis (recent alerts cache)
+        │
+        ▼
 Secured API Gateway (per-tenant API keys + rate limiting)
+\`\`\`
 
 ## Features
 
