@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+redis
+requests
+pinecone
+sentence-transformers
+python-dotenv
+scikit-learn==1.5.1
+pandas
+groq
