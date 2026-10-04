@@ -8,26 +8,13 @@ Most fraud-scoring models return a number. This platform goes further: when a tr
 
 ## Architecture
 
-\`\`\`
-Transaction Stream (simulator)
-        │
-        ▼
-FastAPI Scoring Service ──► Logistic Regression model (scikit-learn)
-        │
-        ├── Flagged as fraud?
-        │       │
-        │       ▼
-        │   Embed transaction → Pinecone vector search (similar past fraud cases)
-        │       │
-        │       ▼
-        │   Groq LLM (openai/gpt-oss-20b) → plain-English explanation
-        │       │
-        │       ▼
-        │   Redis (recent alerts cache)
-        │
-        ▼
-Secured API Gateway (per-tenant API keys + rate limiting)
-\`\`\`
+1. Transaction Stream (simulator) sends data to the FastAPI Scoring Service
+2. The Scoring Service runs the transaction through a Logistic Regression model (scikit-learn)
+3. If flagged as fraud:
+   - The transaction is embedded and matched against Pinecone (vector search over similar past fraud cases)
+   - The match results are sent to a Groq LLM (openai/gpt-oss-20b), which generates a plain-English explanation
+   - The result is cached in Redis as a recent alert
+4. All requests pass through a Secured API Gateway enforcing per-tenant API keys and rate limiting
 
 ## Features
 
