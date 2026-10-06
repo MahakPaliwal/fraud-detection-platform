@@ -1,7 +1,7 @@
 fastapi
 uvicorn
 redis
-requests
+requests 
 pinecone
 sentence-transformers
 python-dotenv
