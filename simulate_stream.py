@@ -17,11 +17,11 @@ while True:
     txn = {k: v for k, v in txn.items() if k != "Class"}
 
     try:
-        response = requests.post(API_URL, json=txn)
+        response = requests.post(API_URL,json=txn,headers={"x-api-key": "key-bank-a-123"})
         result = response.json()
         flag = "🚨 FRAUD" if result["prediction"] == 1 else "✅ normal"
         print(f"{flag}  | probability={result['fraud_probability']:.4f} | time={result['timestamp']}")
     except Exception as e:
         print("Error sending transaction:", e)
 
-    time.sleep(random.uniform(1, 2))  # wait 1-2 seconds between transactions
+    time.sleep(random.uniform(7, 10))  # stay under bank-a's 10/minute limits
