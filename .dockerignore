@@ -1,0 +1,6 @@
+creditcard.csv
+.env
+.git
+__pycache__
+frontend
+*.pyc

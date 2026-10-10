@@ -1,3 +1,6 @@
-__pycache__/ *.pyc 
-.env 
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
 creditcard.csv
+node_modules/
