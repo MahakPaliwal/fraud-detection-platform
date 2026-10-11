@@ -1,16 +1,40 @@
-# React + Vite
+# Fraud Watch Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React dashboard for the Fraud Watch fraud detection platform. It shows flagged transactions as they arrive, lets an analyst inspect the AI-generated explanation for each one, and mark alerts as reviewed.
 
-Currently, two official plugins are available:
+See the [root README](../README.md) for the full system overview, architecture, and backend setup.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- Live alert feed over a WebSocket, with automatic reconnect and a connection indicator
+- Master-detail layout: select an alert to see its confidence, explanation, similar past cases, and raw transaction values
+- Filter by severity or review status, search by amount or feature, and sort by newest or confidence
+- Mark alerts as reviewed, with the status synced across open tabs
+- Open-alert count, average confidence, and an activity sparkline
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Stack
 
-## Expanding the Oxlint configuration
+React, Vite, and Recharts.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## Run locally
+
+The backend must be running first (`docker-compose up -d` from the repository root).
+
+```bash
+npm install
+npm run dev
+```
+
+Open http://localhost:5173.
+
+## Configuration
+
+The backend addresses and the demo API key are constants at the top of `src/App.jsx`:
+
+```js
+const API = 'http://127.0.0.1:8000';
+const WS_URL = 'ws://127.0.0.1:8000/ws';
+const API_KEY = 'key-bank-a-123';
+```
+
+The API key is hardcoded for local demo use only. A real deployment would put authentication in front of the dashboard instead of shipping a key in frontend code.
