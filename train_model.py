@@ -17,7 +17,7 @@ from sklearn.preprocessing import StandardScaler
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42, stratify=y
 )
-
+X_test_raw = X_test.copy()
 scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_test_scaled = scaler.transform(X_test)
@@ -39,8 +39,8 @@ with open("model.pkl", "wb") as f:
     pickle.dump(model, f)
 
 # 5. Save a handful of sample transactions (for Step 2's stream simulator)
-sample_fraud = X_test[y_test == 1].head(5)
-sample_normal = X_test[y_test == 0].head(15)
+sample_fraud = X_test_raw[y_test == 1].head(5)
+sample_normal = X_test_raw[y_test == 0].head(15)
 samples = pd.concat([sample_fraud, sample_normal]).to_dict(orient="records")
 
 with open("sample_transactions.json", "w") as f:

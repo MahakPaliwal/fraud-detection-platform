@@ -6,7 +6,6 @@ import redis
 import json
 import os
 import time
-from datetime import datetime
 from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
 from pinecone import Pinecone
@@ -15,6 +14,7 @@ import hashlib
 import asyncio
 import redis.asyncio as aioredis
 from fastapi import FastAPI, Header, HTTPException, Depends, WebSocket, WebSocketDisconnect
+from datetime import datetime, timezone
 
 load_dotenv()
 
@@ -53,7 +53,6 @@ API_KEYS = {
     "key-bank-a-123": {"tenant": "bank-a", "limit_per_minute": 10},
     "key-bank-b-456": {"tenant": "bank-b", "limit_per_minute": 5},
 }
-request_log = {}
 
 def verify_api_key(x_api_key: str = Header(...)):
     if x_api_key not in API_KEYS:
@@ -63,15 +62,14 @@ def verify_api_key(x_api_key: str = Header(...)):
     tenant = tenant_info["tenant"]
     limit = tenant_info["limit_per_minute"]
 
-    now = time.time()
-    timestamps = request_log.get(tenant, [])
-    timestamps = [t for t in timestamps if now - t < 60]
+    window = int(time.time() // 60)
+    key = f"ratelimit:{tenant}:{window}"
+    count = r.incr(key)
+    if count == 1:
+        r.expire(key, 60)
 
-    if len(timestamps) >= limit:
+    if count > limit:
         raise HTTPException(status_code=429, detail=f"Rate limit exceeded for {tenant}. Max {limit}/minute.")
-
-    timestamps.append(now)
-    request_log[tenant] = timestamps
 
     return tenant
 
@@ -163,7 +161,7 @@ def predict(transaction: Transaction, tenant: str = Depends(verify_api_key)):
     result = {
         "prediction": int(prediction),
         "fraud_probability": round(float(probability), 4),
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "transaction": txn_dict,
     }
 
