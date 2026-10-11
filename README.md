@@ -6,7 +6,12 @@ When a transaction is flagged, the system searches a vector database of past fra
 
 ## Demo
 
-<!-- After adding docs/dashboard.png, replace this comment with: ![Fraud Watch dashboard](docs/dashboard.png) -->
+<img width="1915" height="817" alt="image" src="https://github.com/user-attachments/assets/1140c782-a49c-46d0-bb05-df8255bfe098" />
+
+
+<img width="1916" height="820" alt="image" src="https://github.com/user-attachments/assets/b00da9e8-d538-4673-8526-05eeb5c65cc8" />
+
+
 
 ## Features
 
