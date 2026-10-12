@@ -2,9 +2,12 @@ import { useState, useEffect, useRef } from 'react';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import './App.css';
 
-const API = 'http://127.0.0.1:8000';
-const WS_URL = 'ws://127.0.0.1:8000/ws';
-const API_KEY = 'key-bank-a-123';
+const API = import.meta.env.DEV ? 'http://127.0.0.1:8000' : '';
+const WS_URL = import.meta.env.DEV
+  ? 'ws://127.0.0.1:8000/ws'
+  : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws`;
+const API_KEY = 'key-bank-b-456';
+const DEMO = import.meta.env.VITE_DEMO === 'true';
 
 function topFeatures(txn) {
   return Object.entries(txn)
@@ -35,6 +38,12 @@ function App() {
   const newSinceTick = useRef(0);
 
   const resolveAlert = async (timestamp) => {
+    if (DEMO) {
+      setAlerts((prev) =>
+        prev.map((a) => (a.timestamp === timestamp ? { ...a, resolved: true } : a))
+      );
+      return;
+    }
     try {
       const res = await fetch(`${API}/alerts/${encodeURIComponent(timestamp)}/resolve`, {
         method: 'POST',
@@ -60,6 +69,7 @@ function App() {
   useEffect(() => {
     let ws;
     let retryTimer;
+    let demoTimer;
     let closed = false;
 
     const loadAlerts = async () => {
@@ -78,7 +88,7 @@ function App() {
 
       ws.onopen = () => {
         setConnected(true);
-        loadAlerts(); // catch up on anything missed while disconnected
+        loadAlerts();
       };
 
       ws.onmessage = (event) => {
@@ -101,7 +111,45 @@ function App() {
       };
     };
 
-    connect();
+    const startDemo = async () => {
+      try {
+        const res = await fetch('/demo-alerts.json');
+        const data = await res.json();
+        if (closed) return;
+        const samples = data.alerts;
+        if (!samples.length) return;
+
+        const seeded = samples.slice(0, 6).map((a, i) => ({
+          ...a,
+          timestamp: new Date(Date.now() - (i + 1) * 40000).toISOString(),
+          resolved: false,
+        }));
+        seeded.forEach((a) => knownIds.current.add(a.timestamp));
+        setAlerts(seeded);
+        setConnected(true);
+
+        let index = 6;
+        const emit = () => {
+          if (closed) return;
+          const base = samples[index % samples.length];
+          index += 1;
+          const alert = { ...base, timestamp: new Date().toISOString(), resolved: false };
+          knownIds.current.add(alert.timestamp);
+          newSinceTick.current += 1;
+          setAlerts((prev) => [alert, ...prev].slice(0, 100));
+          demoTimer = setTimeout(emit, 5000 + Math.random() * 5000);
+        };
+        demoTimer = setTimeout(emit, 4000);
+      } catch {
+        // demo data missing
+      }
+    };
+
+    if (DEMO) {
+      startDemo();
+    } else {
+      connect();
+    }
 
     const tick = setInterval(() => {
       setHistory((prev) => [...prev.slice(-19), { count: newSinceTick.current }]);
@@ -112,6 +160,7 @@ function App() {
     return () => {
       closed = true;
       clearTimeout(retryTimer);
+      clearTimeout(demoTimer);
       clearInterval(tick);
       clearInterval(clockInterval);
       if (ws) ws.close();
@@ -163,12 +212,23 @@ function App() {
         <h1>
           <span
             className={`live-dot ${connected ? '' : 'offline'}`}
-            title={connected ? 'Live: connected' : 'Reconnecting...'}
+            title={DEMO ? 'Demo replay' : connected ? 'Live: connected' : 'Reconnecting...'}
           />{' '}
           Fraud Watch
         </h1>
         <span className="clock">{clock.toLocaleTimeString()}</span>
       </div>
+
+      {DEMO && (
+        <div className="demo-banner">
+          Demo mode: this page replays alerts captured from the live system. The backend
+          (FastAPI, Redis, Pinecone, Groq) is not running here.{' '}
+          <a href="https://github.com/MahakPaliwal/fraud-detection-platform" target="_blank" rel="noreferrer">
+            See the GitHub repo
+          </a>{' '}
+          to run the full stack.
+        </div>
+      )}
 
       <div className="stats-strip">
         <div className="stat"><span className="stat-value">{openCount}</span><span className="stat-label">open alerts</span></div>
@@ -220,7 +280,7 @@ function App() {
               >
                 <span className={`severity-dot ${a.severity}`} />
                 <div className="row-main">
-                  <div className="row-amount tooltip" data-tooltip="How unusual this amount is vs. normal">
+                  <div className="row-amount tooltip" data-tooltip="Original transaction amount">
                     {a.transaction.Amount.toFixed(2)}
                   </div>
                   <div className="row-meta">{timeAgo(a.timestamp, clock)} · {(a.fraud_probability * 100).toFixed(0)}%</div>
@@ -237,7 +297,7 @@ function App() {
           {selected && (
             <>
               <div className="detail-header">
-                <span className="detail-amount tooltip" data-tooltip="How unusual this amount is vs. normal">
+                <span className="detail-amount tooltip" data-tooltip="Original transaction amount">
                   {selected.transaction.Amount.toFixed(2)}
                 </span>
                 <span className="detail-time">{new Date(selected.timestamp).toLocaleString()}</span>

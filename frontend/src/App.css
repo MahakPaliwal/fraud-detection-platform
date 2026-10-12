@@ -443,3 +443,17 @@ body {
   background: var(--elevated);
   animation: none;
 }
+
+.demo-banner {
+  border: 1px solid var(--elevated);
+  color: var(--elevated);
+  background: rgba(255, 180, 84, 0.08);
+  font-size: 0.8rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.demo-banner a {
+  color: var(--elevated);
+}
