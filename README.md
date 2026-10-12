@@ -17,6 +17,9 @@ When a transaction is flagged, the system searches a vector database of past fra
 
 
 
+**Live demo:** https://fraud-detection-platform-alpha.vercel.app/
+
+The hosted page replays alerts captured from the full system (FastAPI, Redis, Pinecone, Groq running locally in Docker). The backend isn't deployed, so alerts there are a replay. To run the full stack, see [Setup](#setup).
 
 ## Features
 
@@ -185,13 +188,14 @@ The tests cover the health check and authentication behavior. They run automatic
 - **Unvalidated explanations.** The LLM explanations are grounded in retrieved similar cases and instructed not to infer time of day, but they are not otherwise checked for factual accuracy.
 - **Fixed-window rate limits.** A burst across a window boundary can briefly exceed a tenant's limit.
 - **Anonymized features.** Most model inputs are PCA components (V1 to V28), so explanations can point to which features deviate but not what they mean in business terms.
+- - **Replay-only hosted demo.** The public link is a static replay of captured alerts. The full backend runs locally via Docker Compose.
 
 ## Future Improvements
 
 - Replace the simulator with a Kafka-based ingestion pipeline
 - Move tenants and API keys into a database, scope alerts per tenant, and add dashboard authentication
 - Add SHAP-based feature attributions alongside the LLM explanation
-- Deploy to the cloud with a public demo URL
+- Deploy the backend to the cloud (the hosted demo is currently a replay)
 
 ## Author
 
